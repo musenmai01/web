@@ -1,0 +1,495 @@
+<!-- マウスクリックで弾が発射できる
+全体をスケールダウンさせて弾の速度を調節した
+
+マウスにカメラがついてくる-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>試し1_2</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="icon" type="image/png" href="img/logo_brack.png" sizes="16x16">
+	    <link rel="icon" type="image/png" href="img/logo_brack.png" sizes="32x32">
+	    <link rel="icon" type="image/png" href="img/logo_brack.png" sizes="96x96">
+
+		<script src="js/three.min.js"></script>
+		<script src="js/ammo.js"></script>
+		<script src="js/stats.min.js"></script>
+		<script src="js/3Dink.js"></script>
+
+		<style>
+			h1{
+				color: #ff0000;
+			}
+			div{
+				position: relative;
+				background-color: transparent;
+			}
+
+			canvas{
+				position: absolute;
+			}
+		</style>
+
+	</head>
+	<body>
+
+		<div id="container">
+
+		<canvas id="parent">
+
+		<script>
+
+			var container;
+			var camera, scene, renderer, controls, stats;
+			var mouseX = 0, mouseY = 0;
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+
+			//クリックした時用のやつ
+			var mouseCoords = new THREE.Vector2();
+			var raycaster = new THREE.Raycaster();
+
+			//押した時出てくるボールのやつ
+			var ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFA58AC } );
+			var margin = 0.05;
+
+			//地球と同じ物理条件にするためのやつ
+			var pos = new THREE.Vector3();
+			var quat = new THREE.Quaternion();
+
+			var rigidBodies = [];
+			var gravityConstant = 1;
+
+			//発射した弾が動くように時間の概念用
+			var clock = new THREE.Clock();
+			var numObjectsToRemove = 0;
+
+			var transformAux1 = new Ammo.btTransform();
+			var time = 0;
+
+
+
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 95;
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x000000 );
+
+
+                // light
+                var light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(10, 30, 5);
+                light.castShadow = true;
+                scene.add(light);
+                var ambient = new THREE.AmbientLight(0xffffff);
+                scene.add(ambient);
+
+                //座標の線（目安）
+                var axis = new THREE.AxisHelper(1000);
+                axis.position.set(0, 0, 0);
+                scene.add(axis);
+
+
+				//Blenderで作った3Dモデルを読み込む
+				//お米
+                var loader = new THREE.JSONLoader();
+                loader.load( '3D/okome.json', function(geometry, materials)
+                {
+                    console.log(geometry);
+                    var faceMaterial = new THREE.MeshFaceMaterial(materials);
+                    okome = new THREE.Mesh(geometry, faceMaterial);
+                    okome.position.set(40, -95, -30);
+                    okome.scale.set(40, 40, 40);
+                    scene.add(okome);
+
+					DDDINK.addURL(okome, 'tobasu1.html');
+                });
+				//無洗米（日本語テキストがないからBlenderで作った）
+                var loader2 = new THREE.JSONLoader();
+                loader2.load( '3D/musenmai.json', function(geometry, materials)
+                {
+                    console.log(geometry);
+                    var faceMaterial = new THREE.MeshFaceMaterial(materials);
+                    musenmai = new THREE.Mesh(geometry, faceMaterial);
+                    musenmai.position.set(-15, 10, 50);
+                    musenmai.rotation.set(0, -Math.PI/2, 0);
+                    musenmai.scale.set(10, 10, 10);
+                    scene.add(musenmai);
+                });
+				//logo
+				var loader2 = new THREE.JSONLoader();
+				loader2.load( '3D/logo.json', function(geometry, materials)
+				{
+					console.log(geometry);
+					var faceMaterial = new THREE.MeshFaceMaterial(materials);
+					musenmai = new THREE.Mesh(geometry, faceMaterial);
+					musenmai.position.set(-20, 18, 50);
+					musenmai.rotation.set(0, 0, 0);
+					musenmai.scale.set(3, 3, 3);
+					scene.add(musenmai);
+				});
+
+
+				//３Dの文字（コンテンツ）
+                var loader3 = new THREE.FontLoader();
+                loader3.load('font/helvetiker_regular.typeface.json', function(font){
+                	var textGeometry1 = new THREE.TextGeometry("about", {
+                		font: font,
+                		size: 2,
+                		height: 0.5,
+                		curveSegments: 12
+                	});
+                    var textGeometry2 = new THREE.TextGeometry("work", {
+                		font: font,
+                		size: 2,
+                		height: 0.5,
+                		curveSegments: 12
+                	});
+                    var textGeometry3 = new THREE.TextGeometry("demo", {
+                		font: font,
+                		size: 2,
+                		height: 0.5,
+                		curveSegments: 12
+                	});
+                    var textGeometry4 = new THREE.TextGeometry("SNS", {
+                		font: font,
+                		size: 2,
+                		height: 0.5,
+                		curveSegments: 12
+                	});
+                	var materials = new THREE.MeshBasicMaterial({color: 0xffffff});
+                	var about = new THREE.Mesh(textGeometry1, materials);
+                    about.position.set(-20, 0, 50);
+                    var work = new THREE.Mesh(textGeometry2, materials);
+                    work.position.set(-20, -4, 50);
+                    var demo = new THREE.Mesh(textGeometry3, materials);
+                    demo.position.set(-20, -8, 50);
+                    var sns = new THREE.Mesh(textGeometry4, materials);
+                    sns.position.set(-20, -12, 50);
+                    scene.add(about);
+                    scene.add(work);
+                    scene.add(demo);
+                	scene.add(sns);
+                });
+
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+
+				//renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				//
+				window.addEventListener( 'resize', onWindowResize, false );
+
+
+				initInput();
+				initPhysics();
+
+				// controls = new THREE.OrbitControls( camera );
+				// controls.target.set( 0, 2, 0 );
+				// controls.update();
+
+				//フレームレートを表示する
+				stats = new Stats();
+				document.body.appendChild( stats.dom );
+			}
+
+
+			//可変なウィンドウサイズにする
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			//
+			function onDocumentMouseMove( event ) {
+				mouseX = ( event.clientX - windowHalfX );
+				mouseY = ( event.clientY - windowHalfY );
+			}
+
+
+			//動くもの
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+				stats.update();
+
+			}
+
+			//描画用？
+			function render() {
+				camera.position.x += ( mouseX - camera.position.x * 50 ) * 0.00029;
+				camera.position.y += ( - mouseY - camera.position.y * 30 ) * 0.0029;
+
+				camera.lookAt( scene.position );
+				renderer.render( scene, camera );
+
+				var deltaTime = clock.getDelta();
+				updatePhysics( deltaTime );
+				time += deltaTime;
+
+			}
+
+			//物理的な何か
+			function initPhysics() {
+
+				// Physics configuration
+
+				collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+				dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
+				broadphase = new Ammo.btDbvtBroadphase();
+				solver = new Ammo.btSequentialImpulseConstraintSolver();
+				physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
+				physicsWorld.setGravity( new Ammo.btVector3( 0, - gravityConstant, 0 ) );
+
+			}
+
+
+			//ボールを剛体にする（物理の式に従わせるために）
+			function createRigidBody( object, physicsShape, mass, pos, quat, vel, angVel ) {
+
+				if ( pos ) {
+					object.position.copy( pos );
+				}
+				else {
+					pos = object.position;
+				}
+				if ( quat ) {
+					object.quaternion.copy( quat );
+				}
+				else {
+					quat = object.quaternion;
+				}
+
+				var transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+				transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+				var motionState = new Ammo.btDefaultMotionState( transform );
+
+				var localInertia = new Ammo.btVector3( 0, 0, 0 );
+				physicsShape.calculateLocalInertia( mass, localInertia );
+
+				var rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, physicsShape, localInertia );
+				var body = new Ammo.btRigidBody( rbInfo );
+
+				body.setFriction( 10 );
+
+				if ( vel ) {
+					body.setLinearVelocity( new Ammo.btVector3( vel.x, vel.y, vel.z ) );
+				}
+				if ( angVel ) {
+					body.setAngularVelocity( new Ammo.btVector3( angVel.x, angVel.y, angVel.z ) );
+				}
+
+				object.userData.physicsBody = body;
+				object.userData.collided = false;
+
+				scene.add( object );
+
+				if ( mass > 0 ) {
+					rigidBodies.push( object );
+
+					// Disable deactivation
+					body.setActivationState( 4 );
+				}
+
+				physicsWorld.addRigidBody( body );
+
+				return body;
+			}
+
+
+
+
+			//多分マウスをクリックしたらボールが出てくるようにしてる
+			function initInput() {
+
+				window.addEventListener( 'mousedown', function( event ) {
+
+					mouseCoords.set(
+						( event.clientX / window.innerWidth ) * 2 - 1,
+						- ( event.clientY / window.innerHeight ) * 2 + 1
+					);
+
+					raycaster.setFromCamera( mouseCoords, camera );
+
+					// Creates a ball and throws it
+					var ballMass = 10;
+					var ballRadius = 0.5;
+
+					var ball = new THREE.Mesh( new THREE.SphereBufferGeometry( ballRadius, 14, 10 ), ballMaterial );
+					ball.castShadow = true;
+					ball.receiveShadow = true;
+					var ballShape = new Ammo.btSphereShape( ballRadius );
+					ballShape.setMargin( margin );
+					pos.copy( raycaster.ray.direction );
+					pos.add( raycaster.ray.origin );
+					quat.set( 0, 0, 0, 10 );
+					var ballBody = createRigidBody( ball, ballShape, ballMass, pos, quat );
+
+					pos.copy( raycaster.ray.direction );
+					pos.multiplyScalar( 24 );
+					ballBody.setLinearVelocity( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+
+				}, false );
+
+			}
+
+
+
+			function updatePhysics( deltaTime )
+			{
+
+				// Step world
+				physicsWorld.stepSimulation( deltaTime, 10 );
+
+				// Update rigid bodies
+				for ( var i = 0, il = rigidBodies.length; i < il; i++ )
+				{
+					var objThree = rigidBodies[ i ];
+					var objPhys = objThree.userData.physicsBody;
+					var ms = objPhys.getMotionState();
+					if ( ms )
+					{
+
+						ms.getWorldTransform( transformAux1 );
+						var p = transformAux1.getOrigin();
+						var q = transformAux1.getRotation();
+						objThree.position.set( p.x(), p.y(), p.z() );
+						objThree.quaternion.set( q.x(), q.y(), q.z(), q.w() );
+
+						objThree.userData.collided = false;
+					}
+				}
+
+				for ( var i = 0, il = dispatcher.getNumManifolds(); i < il; i ++ )
+				{
+
+					var contactManifold = dispatcher.getManifoldByIndexInternal( i );
+					var rb0 = contactManifold.getBody0();
+					var rb1 = contactManifold.getBody1();
+
+					var threeObject0 = Ammo.castObject( rb0.getUserPointer(), Ammo.btVector3 ).threeObject;
+					var threeObject1 = Ammo.castObject( rb1.getUserPointer(), Ammo.btVector3 ).threeObject;
+
+					if ( ! threeObject0 && ! threeObject1 )
+					{
+						continue;
+					}
+
+					var userData0 = threeObject0 ? threeObject0.userData : null;
+					var userData1 = threeObject1 ? threeObject1.userData : null;
+
+					var breakable0 = userData0 ? userData0.breakable : false;
+					var breakable1 = userData1 ? userData1.breakable : false;
+
+					var collided0 = userData0 ? userData0.collided : false;
+					var collided1 = userData1 ? userData1.collided : false;
+
+					if ( ( ! breakable0 && ! breakable1 ) || ( collided0 && collided1 ) )
+					{
+						continue;
+					}
+
+					var contact = false;
+					var maxImpulse = 0;
+					for ( var j = 0, jl = contactManifold.getNumContacts(); j < jl; j ++ )
+					{
+						var contactPoint = contactManifold.getContactPoint( j );
+						if ( contactPoint.getDistance() < 0 )
+						{
+							contact = true;
+							var impulse = contactPoint.getAppliedImpulse();
+							if ( impulse > maxImpulse )
+							{
+								maxImpulse = impulse;
+								var pos = contactPoint.get_m_positionWorldOnB();
+								var normal = contactPoint.get_m_normalWorldOnB();
+								impactPoint.set( pos.x(), pos.y(), pos.z() );
+								impactNormal.set( normal.x(), normal.y(), normal.z() );
+							}
+							break;
+						}
+					}
+
+					// If no point has contact, abort
+					if ( ! contact )
+					{
+						continue;
+					}
+
+					// Subdivision
+
+					var fractureImpulse = 250;
+
+					if ( breakable0 && !collided0 && maxImpulse > fractureImpulse )
+					{
+						var debris = convexBreaker.subdivideByImpact( threeObject0, impactPoint, impactNormal , 1, 2, 1.5 );
+
+						var numObjects = debris.length;
+						for ( var j = 0; j < numObjects; j++ )
+						{
+							createDebrisFromBreakableObject( debris[ j ] );
+						}
+
+						objectsToRemove[ numObjectsToRemove++ ] = threeObject0;
+						userData0.collided = true;
+
+					}
+
+					if ( breakable1 && !collided1 && maxImpulse > fractureImpulse )
+					{
+						var debris = convexBreaker.subdivideByImpact( threeObject1, impactPoint, impactNormal , 1, 2, 1.5 );
+
+						var numObjects = debris.length;
+						for ( var j = 0; j < numObjects; j++ )
+						{
+							createDebrisFromBreakableObject( debris[ j ] );
+						}
+
+						objectsToRemove[ numObjectsToRemove++ ] = threeObject1;
+						userData1.collided = true;
+					}
+				}
+
+				for ( var i = 0; i < numObjectsToRemove; i++ )
+				{
+					removeDebris( objectsToRemove[ i ] );
+				}
+				numObjectsToRemove = 0;
+
+			}
+
+
+		</script>
+		</canvas>
+
+		<canvas id="children" width="1440" height="620" style="width: 1440px; height: 620px;">
+			<h1>HOOOOOO</h1>
+			<h2>kokokoko</h2>
+
+
+		</canvas>
+		</div>
+
+	</body>
+</html>
