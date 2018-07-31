@@ -107,8 +107,8 @@
 		{
             var material = new THREE.MeshBasicMaterial(materials);
             musenmai = new THREE.Mesh(geometry, material);
-            musenmai.position.set(-15, 10, 50);
-            musenmai.rotation.set(0, -Math.PI/2, 0);
+            musenmai.position.set(-14, 9, 40);
+            musenmai.rotation.set(0, -Math.PI/2.35, 0);
             musenmai.scale.set(10, 10, 10);
             scene.add(musenmai);
         });
@@ -118,8 +118,8 @@
 		{
 			var material = new THREE.MeshBasicMaterial(materials);
 			musenmai = new THREE.Mesh(geometry, material);
-			musenmai.position.set(-20, 18, 50);
-			musenmai.rotation.set(0, 0, 0);
+			musenmai.position.set(-34, 10, 40);
+			musenmai.rotation.set(0, Math.PI/20, 0);
 			musenmai.scale.set(3, 3, 3);
 			scene.add(musenmai);
 		});
@@ -131,44 +131,38 @@
 		{
         	var textGeometry1 = new THREE.TextGeometry("about", {
         		font: font,
-        		size: 2,
+        		size: 2.5,
         		height: 0.5,
         		curveSegments: 12
         	});
             var textGeometry2 = new THREE.TextGeometry("work", {
         		font: font,
-        		size: 2,
+        		size: 2.5,
         		height: 0.5,
         		curveSegments: 12
         	});
-            var textGeometry3 = new THREE.TextGeometry("demo", {
+            var textGeometry3 = new THREE.TextGeometry("SNS", {
         		font: font,
-        		size: 2,
-        		height: 0.5,
-        		curveSegments: 12
-        	});
-            var textGeometry4 = new THREE.TextGeometry("SNS", {
-        		font: font,
-        		size: 2,
+        		size: 2.5,
         		height: 0.5,
         		curveSegments: 12
         	});
         	var materials = new THREE.MeshBasicMaterial({color: 0xffffff});
         	var about = new THREE.Mesh(textGeometry1, materials);
-            about.position.set(-20, 0, 50);
+            about.position.set(-25, 0, 35);
+			about.rotation.set(0, Math.PI/20, 0);
             var work = new THREE.Mesh(textGeometry2, materials);
-            work.position.set(-20, -4, 50);
-            var demo = new THREE.Mesh(textGeometry3, materials);
-            demo.position.set(-20, -8, 50);
-            var sns = new THREE.Mesh(textGeometry4, materials);
-            sns.position.set(-20, -12, 50);
+            work.position.set(-25, -8, 35);
+			work.rotation.set(0, Math.PI/20, 0);
+            var sns = new THREE.Mesh(textGeometry3, materials);
+            sns.position.set(-25, -16, 35);
+			sns.rotation.set(0, Math.PI/20, 0);
+
             scene.add(about);
             scene.add(work);
-            scene.add(demo);
         	scene.add(sns);
 
         });
-
 
 		renderer = new THREE.WebGLRenderer( { antialias: true } );
 
@@ -265,8 +259,8 @@
 			var materials = new THREE.MeshBasicMaterial({color: 0xffffff});
 			mesh = new THREE.Mesh( geometry, materials );
 			scene.add( mesh );
-			mesh.position.set(40, -95, -30);
-			mesh.scale.set( 40, 40, 40 );
+			mesh.position.set(30, -97, -30);
+			mesh.scale.set( 39, 39, 39 );
 		} );
 	}
 
