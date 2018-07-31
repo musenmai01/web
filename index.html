@@ -28,14 +28,13 @@
 
 <script src="js/three.js"></script>
 <script src="js/DecalGeometry.js"></script>
-<script src="js/stats.min.js"></script>
 <script src="js/dat.gui.min.js"></script>
 
 <script>
 
 	var container = document.getElementById( 'container' );
 
-	var camera, scene, renderer, stats;
+	var camera, scene, renderer;
 	var mouseX = 0, mouseY = 0;
 	var windowHalfX = window.innerWidth / 2;
 	var windowHalfY = window.innerHeight / 2;
@@ -65,7 +64,6 @@
 	} );
 
 	var decals = [];
-	var mouseHelper;
 	var position = new THREE.Vector3();
 	var orientation = new THREE.Euler();
 	var size = new THREE.Vector3( 10, 10, 10 );
@@ -101,12 +99,6 @@
         scene.add(light);
         var ambient = new THREE.AmbientLight(0xffffff);
         scene.add(ambient);
-
-        //座標の線
-        var axis = new THREE.AxisHelper(1000);
-        axis.position.set(0, 0, 0);
-        scene.add(axis);
-
 
 		//Blenderで作った3Dモデルを読み込む
 		//無洗米（日本語テキストがないからBlenderで作った）
@@ -253,11 +245,6 @@
 		}
 
 
-		//フレームレートを表示する
-		stats = new Stats();
-		document.body.appendChild( stats.dom );
-
-
 		//調節
 		var gui = new dat.GUI();
 
@@ -323,8 +310,6 @@
 	{
 		requestAnimationFrame( animate );
 		render();
-		stats.update();
-
 	}
 
 
