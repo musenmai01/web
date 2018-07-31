@@ -109,7 +109,7 @@
             musenmai = new THREE.Mesh(geometry, material);
             musenmai.position.set(-14, 9, 40);
             musenmai.rotation.set(0, -Math.PI/2.35, 0);
-            musenmai.scale.set(10, 10, 10);
+            musenmai.scale.set(12, 12, 12);
             scene.add(musenmai);
         });
 		//logo
@@ -118,8 +118,8 @@
 		{
 			var material = new THREE.MeshBasicMaterial(materials);
 			musenmai = new THREE.Mesh(geometry, material);
-			musenmai.position.set(-34, 10, 40);
-			musenmai.rotation.set(0, Math.PI/20, 0);
+			musenmai.position.set(-36, 10, 40);
+			musenmai.rotation.set(0, Math.PI/10, 0);
 			musenmai.scale.set(3, 3, 3);
 			scene.add(musenmai);
 		});
@@ -241,9 +241,6 @@
 
 		//調節
 		var gui = new dat.GUI();
-
-		gui.add( params, 'minScale', 10, 50 );
-		gui.add( params, 'maxScale', 10, 50 );
 		gui.add( params, 'clear' );
 		gui.open();
 
