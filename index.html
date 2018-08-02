@@ -1,34 +1,54 @@
 <!-- 米に塗られる
-マウスにカメラがついてくる-->
+マウスにカメラがついてくる
+3Dモデルからリンク先へ飛べる-->
 
 
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-	<title>試し_塗り2</title>
+	<title>musenmai</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<link rel="icon" type="image/png" href="img/logo_brack.png" sizes="16x16">
     <link rel="icon" type="image/png" href="img/logo_brack.png" sizes="32x32">
     <link rel="icon" type="image/png" href="img/logo_brack.png" sizes="96x96">
 
-	<link rel="stylesheet" href="css/style.css">
+	<style>
+		body {
+			background:#000;
+			padding:0;
+			margin:0;
+			overflow:hidden;
+		}
+		#info {
+			position: absolute;
+			top: 30px;
+			width: 100%;
+			color: #ffffff;
+			padding: 5px;
+			font-family:Monospace;
+			font-size:15px;
+			text-align:center;
+		}
+		a {
+			color: #ffffff;
+		}
+	</style>
+
 	<script src="js/three.js"></script>
+	<script src="js/3Dink.js"></script>
 	<script src="js/DecalGeometry.js"></script>
-	<script src="js/stats.min.js"></script>
 	<script src="js/dat.gui.min.js"></script>
-	<link href="css/featherlight.min.css" type="text/css" rel="stylesheet" />
-	<script src="js/jquery-1.7.0.min.js"></script>
-	<script src="js/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
 
 
 </head>
 <body>
 
 <div id="info">
-	<a href="#" data-featherlight="#mylightbox">about</a>
+	<a href="about.html">about</a>
 	demo
-	github
+	<a href="https://github.com/musenmai01"><i class="fab fa-github"></i></a>
 </div>
 
 <div id="container"></div>
@@ -89,20 +109,46 @@
 
 	function init()
 	{
+		renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+		container.appendChild( renderer.domElement );
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		window.addEventListener( 'resize', onWindowResize, false );
+
+		var moved = false;
+
+		window.addEventListener( 'mousedown', function () {
+			moved = false;
+		}, false );
+		window.addEventListener( 'mouseup', function() {
+			checkIntersection();
+			if ( ! moved && intersection.intersects ) shoot();
+		} );
+
+		window.addEventListener( 'mousemove', onTouchMove );
+		window.addEventListener( 'touchmove', onTouchMove );
 
 		camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
 		camera.position.z = 95;
 		scene = new THREE.Scene();
 		scene.background = new THREE.Color( 0x000000 );
 
+		// light
+		var light = new THREE.DirectionalLight(0xffffff, 1);
+		light.position.set(10, 30, 5);
+		light.castShadow = true;
+		scene.add(light);
+		var ambient = new THREE.AmbientLight(0xffffff);
+		scene.add(ambient);
 
-        // light
-        var light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 30, 5);
-        light.castShadow = true;
-        scene.add(light);
-        var ambient = new THREE.AmbientLight(0xffffff);
-        scene.add(ambient);
+		// リンク追加
+		DDDINK.readRendererObj(renderer, scene, camera);
+		DDDINK.domEvent.addFnc('Fn','Fn');
+
+
 
 		//Blenderで作った3Dモデルを読み込む
 		//無洗米（日本語テキストがないからBlenderで作った）
@@ -166,30 +212,11 @@
             scene.add(b);
         	scene.add(c);
 
+			DDDINK.addURL(c, 'proto_nuru01.html');
+
+
         });
 
-		renderer = new THREE.WebGLRenderer( { antialias: true } );
-
-
-		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.setSize( window.innerWidth, window.innerHeight );
-
-		container.appendChild( renderer.domElement );
-		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-		window.addEventListener( 'resize', onWindowResize, false );
-
-		var moved = false;
-
-		window.addEventListener( 'mousedown', function () {
-			moved = false;
-		}, false );
-		window.addEventListener( 'mouseup', function() {
-			checkIntersection();
-			if ( ! moved && intersection.intersects ) shoot();
-		} );
-
-		window.addEventListener( 'mousemove', onTouchMove );
-		window.addEventListener( 'touchmove', onTouchMove );
 
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3(), new THREE.Vector3() );
