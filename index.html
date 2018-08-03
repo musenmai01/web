@@ -27,7 +27,7 @@
 			color: #ffffff;
 			padding: 5px;
 			font-family:Monospace;
-			font-size:15px;
+			font-size:18px;
 			text-align:center;
 		}
 		a {
@@ -46,8 +46,6 @@
 <body>
 
 <div id="info">
-	<a href="about.html">about</a>
-	demo
 	<a href="https://github.com/musenmai01"><i class="fab fa-github"></i></a>
 </div>
 
@@ -96,7 +94,7 @@
 		minScale: 20,
 		maxScale: 40,
 		rotate: true,
-		clear: function() {
+		paints_clear: function() {
 
 			removeDecals();
 
@@ -270,9 +268,8 @@
 		}
 
 
-		//調節
 		var gui = new dat.GUI();
-		gui.add( params, 'clear' );
+		gui.add( params, 'paints_clear' );
 		gui.open();
 
 	}
